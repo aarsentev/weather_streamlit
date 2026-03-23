@@ -37,3 +37,33 @@ def add_rolling_stats(city_df, window=30):
     city_df["rolling_std"] = city_df["rolling_std"].fillna(0)
 
     return city_df
+
+
+def compute_seasonal_stats(city_df):
+    stats = city_df.groupby("season")["temperature"].agg(["mean", "std"]).reset_index()
+    stats.columns = ["season", "season_mean", "season_std"]
+    return stats
+
+
+def detect_anomalies(city_df):
+    city_df = city_df.copy()
+
+    # Вычисляем сезонную статистику
+    seasonal_stats = city_df.groupby("season")["temperature"].agg(["mean", "std"])
+
+    # Присоединяем к данным
+    city_df = city_df.merge(
+        seasonal_stats,
+        left_on="season",
+        right_index=True,
+        how="left"
+    )
+
+    # Определяем аномалии
+    city_df["is_anomaly"] = (
+            (city_df["temperature"] < city_df["mean"] - 2 * city_df["std"]) |
+            (city_df["temperature"] > city_df["mean"] + 2 * city_df["std"])
+    )
+
+    return city_df
+
