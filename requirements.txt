@@ -3,3 +3,5 @@ pandas
 numpy
 aiohttp
 dotenv
+requests
+matplotlib
